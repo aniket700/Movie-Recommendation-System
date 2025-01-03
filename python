@@ -1,0 +1,40 @@
+
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+movies = pd.DataFrame({
+    "movie_id": [1, 2, 3, 4, 5],
+    "title": ["The Matrix", "The Godfather", "The Dark Knight", "Pulp Fiction", "Fight Club"],
+    "genres": ["Action Sci-Fi", "Crime Drama", "Action Crime Drama", "Crime Drama", "Drama Mystery"],
+    "keywords": ["AI Virtual Reality", "Mafia Family", "Vigilante Hero", "Crime Story", "Psychological Thriller"]
+})
+
+movies["features"] = movies["genres"] + " " + movies["keywords"]
+
+count_vectorizer = CountVectorizer()
+feature_matrix = count_vectorizer.fit_transform(movies["features"])
+
+cosine_sim = cosine_similarity(feature_matrix)
+
+def recommend_movies(movie_title, cosine_sim=cosine_sim):
+    if movie_title not in movies["title"].values:
+        return f"'{movie_title}' not found in the movie database!"
+    
+    idx = movies[movies["title"] == movie_title].index[0]
+
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    
+    top_movie_indices = [i[0] for i in sim_scores[1:6]]  
+    return movies.iloc[top_movie_indices]["title"].tolist()
+
+movie_to_search = "The Godfather"
+recommended_movies = recommend_movies(movie_to_search)
+print(f"Movies similar to '{movie_to_search}':")
+print(recommended_movies)
+
+o/p:
+Movies similar to 'The Godfather':
+['Pulp Fiction', 'The Dark Knight', 'Fight Club', 'The Matrix']
